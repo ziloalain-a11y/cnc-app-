@@ -1,0 +1,20 @@
+"use client";
+
+import { useEffect } from "react";
+
+export default function ServiceWorkerRegister() {
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("/sw.js", { scope: "/" })
+        .then((reg) => {
+          console.log("[CNC] Service Worker enregistré:", reg.scope);
+        })
+        .catch((err) => {
+          console.warn("[CNC] Échec enregistrement SW:", err);
+        });
+    }
+  }, []);
+
+  return null;
+}
