@@ -11,6 +11,27 @@ import {
   stripHtml,
 } from "@/lib/api";
 
+export const dynamicParams = true;
+export const revalidate = 3600;
+
+export async function generateStaticParams() {
+  const WP_API_BASE =
+    process.env.NEXT_PUBLIC_WP_API_URL ||
+    "https://corbeaunews-centrafrique.org/wp-json/wp/v2";
+
+  try {
+    const res = await fetch(
+      `${WP_API_BASE}/posts?per_page=50&page=1&status=publish&orderby=date&order=desc&_fields=id`,
+      { cache: "no-store" }
+    );
+    if (!res.ok) return [];
+    const posts: { id: number }[] = await res.json();
+    return posts.map((p) => ({ id: String(p.id) }));
+  } catch {
+    return [];
+  }
+}
+
 interface ArticlePageProps {
   params: Promise<{ id: string }>;
 }

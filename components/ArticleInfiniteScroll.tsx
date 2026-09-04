@@ -25,19 +25,25 @@ export default function ArticleInfiniteScroll({
     if (loading || !hasMore) return;
     setLoading(true);
     try {
-      const params = new URLSearchParams({
+      const WP_API_BASE =
+        process.env.NEXT_PUBLIC_WP_API_URL ||
+        "https://corbeaunews-centrafrique.org/wp-json/wp/v2";
+      const qs = new URLSearchParams({
+        _embed: "wp:featuredmedia,wp:term,author",
+        per_page: "22",
         page: String(page),
-        perPage: "22",
+        status: "publish",
       });
-      if (categoryId) params.set("category", String(categoryId));
+      if (categoryId) qs.set("categories", String(categoryId));
 
-      const res = await fetch(`/api/posts?${params}`);
+      const res = await fetch(`${WP_API_BASE}/posts?${qs}`);
       if (!res.ok) throw new Error("Erreur réseau");
 
-      const data = await res.json();
-      setPosts((prev) => [...prev, ...data.posts]);
+      const newPosts: WPPost[] = await res.json();
+      const totalPages = parseInt(res.headers.get("X-WP-TotalPages") || "1", 10);
+      setPosts((prev) => [...prev, ...newPosts]);
       setPage((p) => p + 1);
-      if (page >= data.totalPages) setHasMore(false);
+      if (page >= totalPages) setHasMore(false);
     } catch {
       // silently fail — user can scroll again to retry
     } finally {

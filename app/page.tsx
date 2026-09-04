@@ -1,52 +1,34 @@
-import { getPosts, getCategories } from "@/lib/api";
-import ArticleInfiniteScroll from "@/components/ArticleInfiniteScroll";
+import { getPosts } from "@/lib/api";
+import HomeClient from "@/components/HomeClient";
+import { Suspense } from "react";
 
-interface HomePageProps {
-  searchParams: Promise<{
-    category?: string;
-  }>;
-}
+export default async function HomePage() {
+  let initialPosts: Awaited<ReturnType<typeof getPosts>>["posts"] = [];
+  let initialTotalPages = 1;
 
-export default async function HomePage({ searchParams }: HomePageProps) {
-  const resolvedParams = await searchParams;
-  const categoryId = resolvedParams.category
-    ? parseInt(resolvedParams.category, 10)
-    : undefined;
-
-  const [{ posts, totalPages }, categories] = await Promise.all([
-    getPosts({ page: 1, perPage: 22, categoryId }),
-    getCategories(),
-  ]);
-
-  const activeCategoryData = categories.find((c) => c.id === categoryId);
+  try {
+    const result = await getPosts({ page: 1, perPage: 22 });
+    initialPosts = result.posts;
+    initialTotalPages = result.totalPages;
+  } catch {
+    // render with empty state — client will handle retry
+  }
 
   return (
-    <div className="mt-4">
-      {activeCategoryData && (
-        <div className="mb-5">
-          <h1 className="text-2xl font-black text-gray-900">
-            {activeCategoryData.name}
-          </h1>
+    <Suspense
+      fallback={
+        <div className="flex justify-center py-20">
+          <div className="flex items-center gap-3 text-gray-500">
+            <div className="w-6 h-6 border-2 border-[#8B0000] border-t-transparent rounded-full animate-spin" />
+            <span className="text-sm font-medium">Chargement…</span>
+          </div>
         </div>
-      )}
-
-      {posts.length === 0 ? (
-        <div className="text-center py-20">
-          <div className="text-6xl mb-4">📰</div>
-          <p className="text-gray-500 text-lg font-medium">
-            Aucun article disponible pour le moment.
-          </p>
-          <p className="text-gray-400 text-sm mt-2">
-            Revenez plus tard ou vérifiez votre connexion.
-          </p>
-        </div>
-      ) : (
-        <ArticleInfiniteScroll
-          initialPosts={posts}
-          initialTotalPages={totalPages}
-          categoryId={categoryId}
-        />
-      )}
-    </div>
+      }
+    >
+      <HomeClient
+        initialPosts={initialPosts}
+        initialTotalPages={initialTotalPages}
+      />
+    </Suspense>
   );
 }

@@ -12,15 +12,18 @@ export default function ArticleCard({ post, featured = false }: ArticleCardProps
   const categories = getPostCategories(post);
   const primaryCategory = categories[0];
   const title = stripHtml(post.title.rendered);
+  const date = new Date(post.date).toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 
   return (
     <Link href={`/article/${post.id}`} className="block group">
-      <article
-        className="relative rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 bg-gray-900"
-        style={{ minHeight: featured ? "320px" : "220px" }}
-      >
+      <article className="rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 bg-gray-900">
+        {/* Image pleine largeur */}
         <div
-          className="relative w-full"
+          className="relative w-full overflow-hidden"
           style={{ height: featured ? "320px" : "220px" }}
         >
           {imageUrl ? (
@@ -43,27 +46,25 @@ export default function ArticleCard({ post, featured = false }: ArticleCardProps
             </div>
           )}
 
-          {/* Overlay sombre dégradé bas */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-
           {/* Badge catégorie */}
           {primaryCategory && (
-            <span className="absolute top-3 left-3 bg-[#8B0000] text-white text-xs font-bold px-2 py-1 rounded uppercase tracking-wider shadow">
+            <span className="absolute top-3 left-3 bg-[#8B0000] text-white text-xs font-bold px-2 py-1 rounded uppercase tracking-wider shadow z-10">
               {primaryCategory.name}
             </span>
           )}
+        </div>
 
-          {/* Titre en blanc en bas */}
-          <div className="absolute bottom-0 left-0 right-0 p-4">
-            <h2
-              className={`text-white font-bold leading-snug drop-shadow-lg ${
-                featured
-                  ? "text-xl md:text-2xl line-clamp-3"
-                  : "text-sm md:text-base line-clamp-3"
-              }`}
-              dangerouslySetInnerHTML={{ __html: post.title.rendered }}
-            />
-          </div>
+        {/* Titre et date EN DESSOUS de l'image */}
+        <div className="p-3">
+          <h2
+            className={`text-white font-bold leading-snug ${
+              featured
+                ? "text-xl md:text-2xl line-clamp-3"
+                : "text-sm md:text-base line-clamp-3"
+            }`}
+            dangerouslySetInnerHTML={{ __html: post.title.rendered }}
+          />
+          <p className="text-gray-400 text-xs mt-2">{date}</p>
         </div>
       </article>
     </Link>

@@ -136,13 +136,25 @@ export function getFeaturedImageUrl(
   const media = post._embedded?.["wp:featuredmedia"]?.[0];
   if (!media) return null;
 
-  return (
+  const sizeUrl =
     media.media_details?.sizes?.[size]?.source_url ||
     media.media_details?.sizes?.large?.source_url ||
-    media.media_details?.sizes?.medium?.source_url ||
-    media.source_url ||
-    null
-  );
+    media.media_details?.sizes?.medium?.source_url;
+
+  // If the thumbnail comes from a different domain (e.g. Jetpack CDN i0.wp.com),
+  // fall back to source_url which is always the original WordPress upload domain.
+  if (sizeUrl && media.source_url) {
+    try {
+      if (new URL(sizeUrl).hostname === new URL(media.source_url).hostname) {
+        return sizeUrl;
+      }
+    } catch {
+      // malformed URL — fall through
+    }
+    return media.source_url;
+  }
+
+  return sizeUrl || media.source_url || null;
 }
 
 export function getPostCategories(post: WPPost): WPTerm[] {
