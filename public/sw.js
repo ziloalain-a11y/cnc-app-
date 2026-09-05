@@ -1,7 +1,6 @@
 // CNC — Corbeau News Centrafrique — Service Worker
-const CACHE_NAME = "cnc-v1";
-const STATIC_CACHE = "cnc-static-v1";
-const API_CACHE = "cnc-api-v1";
+const STATIC_CACHE = "cnc-static-v2";
+const API_CACHE = "cnc-api-v2";
 
 // Resources to pre-cache on install
 const PRECACHE_URLS = ["/", "/offline", "/manifest.json"];
@@ -48,6 +47,14 @@ self.addEventListener("fetch", (event) => {
     /\.(png|jpg|jpeg|webp|gif|svg)$/i.test(url.pathname)
   ) {
     event.respondWith(cacheFirst(event.request, API_CACHE));
+    return;
+  }
+
+  // Next.js image optimizer (/_next/image?url=...): never intercept.
+  // Thumbnails are re-optimized on every deploy (new source domains, new
+  // fallback logic in getFeaturedImageUrl); caching this path risks serving
+  // a stale/broken response from before an image fix indefinitely.
+  if (url.pathname.startsWith("/_next/image")) {
     return;
   }
 
