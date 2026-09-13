@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import type { WPCategory } from "@/lib/api";
@@ -9,8 +9,41 @@ interface HeaderProps {
   categories?: WPCategory[];
 }
 
+const ALERTE_URL = "https://corbeaunews-centrafrique.org/wp-json/cnc/v1/alerte";
+const DEFAULT_TICKER_TEXT =
+  "CNC — Corbeau News Centrafrique · L'actualité de la République Centrafricaine en temps réel · Politique · Société · Économie · Culture · Sport · Sécurité · Diplomatie · Suivez toute l'actu sur CNC";
+
 export default function Header({ categories = [] }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [tickerText, setTickerText] = useState(DEFAULT_TICKER_TEXT);
+  const [tickerLink, setTickerLink] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchAlerte() {
+      try {
+        const res = await fetch(ALERTE_URL);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+        if (data?.texte) {
+          setTickerText(String(data.texte).replace(/\n/g, " "));
+        }
+        setTickerLink(data?.lien ? String(data.lien) : null);
+      } catch {
+        // Fetch failed: keep the current/default ticker text
+      }
+    }
+
+    fetchAlerte();
+    const interval = setInterval(fetchAlerte, 60000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, []);
 
   return (
     <header className="bg-[#8B0000] text-white sticky top-0 z-50 shadow-lg">
@@ -20,10 +53,22 @@ export default function Header({ categories = [] }: HeaderProps) {
           🔴 FLASH INFO
         </span>
         <div className="overflow-hidden flex-1 ml-2">
-          <span className="inline-block animate-ticker">
-            CNC — Corbeau News Centrafrique · L&apos;actualité de la République Centrafricaine en temps réel · Politique · Société · Économie · Culture · Sport · Sécurité · Diplomatie · Suivez toute l&apos;actu sur CNC &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            CNC — Corbeau News Centrafrique · L&apos;actualité de la République Centrafricaine en temps réel · Politique · Société · Économie · Culture · Sport · Sécurité · Diplomatie · Suivez toute l&apos;actu sur CNC &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          </span>
+          {tickerLink ? (
+            <a
+              href={tickerLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block animate-ticker hover:underline"
+            >
+              {tickerText} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              {tickerText} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            </a>
+          ) : (
+            <span className="inline-block animate-ticker">
+              {tickerText} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              {tickerText} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            </span>
+          )}
         </div>
       </div>
 
@@ -52,6 +97,28 @@ export default function Header({ categories = [] }: HeaderProps) {
             sizes="(max-width: 768px) 80vw, 90vw"
           />
         </div>
+
+        {/* Bouton recherche */}
+        <Link
+          href="/recherche"
+          className="flex-shrink-0 flex items-center px-4 bg-[#8B0000] hover:bg-[#6B0000] transition-colors"
+          aria-label="Ouvrir la recherche"
+        >
+          <svg
+            width="20"
+            height="20"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+        </Link>
 
         {/* Burger mobile */}
         <button
