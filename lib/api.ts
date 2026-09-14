@@ -73,10 +73,11 @@ export async function getPosts(
     page?: number;
     perPage?: number;
     categoryId?: number;
+    authorId?: number;
     search?: string;
   } = {}
 ): Promise<PostsResponse> {
-  const { page = 1, perPage = 12, categoryId, search } = params;
+  const { page = 1, perPage = 12, categoryId, authorId, search } = params;
 
   const qs = new URLSearchParams({
     _embed: "wp:featuredmedia,wp:term,author",
@@ -86,6 +87,7 @@ export async function getPosts(
   });
 
   if (categoryId) qs.set("categories", String(categoryId));
+  if (authorId) qs.set("author", String(authorId));
   if (search) qs.set("search", search);
 
   const res = await fetch(`${WP_API_BASE}/posts?${qs}`, {

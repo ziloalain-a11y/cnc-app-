@@ -8,12 +8,16 @@ interface ArticleInfiniteScrollProps {
   initialPosts: WPPost[];
   initialTotalPages: number;
   categoryId?: number;
+  authorId?: number;
+  search?: string;
 }
 
 export default function ArticleInfiniteScroll({
   initialPosts,
   initialTotalPages,
   categoryId,
+  authorId,
+  search,
 }: ArticleInfiniteScrollProps) {
   const [posts, setPosts] = useState<WPPost[]>(initialPosts);
   const [page, setPage] = useState(2);
@@ -35,6 +39,8 @@ export default function ArticleInfiniteScroll({
         status: "publish",
       });
       if (categoryId) qs.set("categories", String(categoryId));
+      if (authorId) qs.set("author", String(authorId));
+      if (search) qs.set("search", search);
 
       const res = await fetch(`${WP_API_BASE}/posts?${qs}`);
       if (!res.ok) throw new Error("Erreur réseau");
@@ -49,7 +55,7 @@ export default function ArticleInfiniteScroll({
     } finally {
       setLoading(false);
     }
-  }, [loading, hasMore, page, categoryId]);
+  }, [loading, hasMore, page, categoryId, authorId, search]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -73,7 +79,7 @@ export default function ArticleInfiniteScroll({
           <ArticleCard
             key={post.id}
             post={post}
-            featured={index === 0 && !categoryId}
+            featured={index === 0 && !categoryId && !authorId && !search}
           />
         ))}
       </div>

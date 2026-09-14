@@ -23,8 +23,9 @@ export default function ArticleCard({ post, featured = false }: ArticleCardProps
       <article className="rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 bg-gray-900">
         {/* Image pleine largeur */}
         <div
-          className="relative w-full overflow-hidden"
-          style={{ height: featured ? "320px" : "220px" }}
+          className={`relative w-full overflow-hidden ${
+            featured ? "aspect-[16/10]" : "aspect-video"
+          }`}
         >
           {imageUrl ? (
             <Image
